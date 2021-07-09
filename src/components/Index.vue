@@ -21,7 +21,7 @@
             <input
               type="text"
               class="location-control"
-             :value="location"
+              :value="location"
               readonly
             />
             <button type="button" class="copy-btn" @click="copyLocation">
@@ -32,7 +32,7 @@
           <button
             type="button"
             :disabled="loading"
-            :class="{ disabled: loading}"
+            :class="{ disabled: loading }"
             class="location-btn"
             @click="getLocation"
           >
@@ -48,59 +48,54 @@
 import mapboxgl from "mapbox-gl";
 import axios from "axios";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import geojsonvt from 'geojson-vt';
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-
-import geoJSON from "@/assets/FOR_PUBL_MTQ.json";
-
+import utils from "@/utils/transform.js";
 
 export default {
   data() {
     return {
       config: {
-          container: "map",
-          style: "mapbox://styles/mapbox/streets-v11",
-          center: this.center,
-          zoom: 11,
-        },
+        container: "map",
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: this.center,
+        zoom: 11
+      },
       loading: false,
       location: "",
       access_token: process.env.VUE_APP_MAP_ACCESS_TOKEN,
       center: [0, 0],
-      map: {},
+      map: {}
     };
   },
   mounted() {
     this.createMap();
     this.transformGeoJson();
-
   },
   methods: {
     async createMap() {
       try {
-        mapboxgl.accessToken = this.access_token
-        const map = new mapboxgl.Map({...this.config});
-        this.map = map
+        mapboxgl.accessToken = this.access_token;
+        const map = new mapboxgl.Map({ ...this.config });
+        this.map = map;
 
-        let geocoder =  new MapboxGeocoder({
-            accessToken: this.access_token,
-            mapboxgl: mapboxgl,
-            marker: false
-          }); 
+        let geocoder = new MapboxGeocoder({
+          accessToken: this.access_token,
+          mapboxgl: mapboxgl,
+          marker: false
+        });
         this.map.addControl(geocoder);
-        geocoder.on("result", (e) => {
+        geocoder.on("result", e => {
           const marker = new mapboxgl.Marker({
             draggable: true,
-            color: "#D80739",
+            color: "#D80739"
           })
             .setLngLat(e.result.center)
             .addTo(this.map);
           this.center = e.result.center;
-          marker.on("dragend", (e) => {
+          marker.on("dragend", e => {
             this.center = Object.values(e.target.getLngLat());
           });
         });
-
       } catch (err) {
         console.log("map error", err);
       }
@@ -109,7 +104,9 @@ export default {
       try {
         this.loading = true;
         const response = await axios.get(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${this.center[0]},${this.center[1]}.json?access_token=${this.access_token}`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${
+            this.center[0]
+          },${this.center[1]}.json?access_token=${this.access_token}`
         );
         this.loading = false;
         this.location = response.data.features[0].place_name;
@@ -119,16 +116,16 @@ export default {
       }
     },
     transformGeoJson() {
-
+      utils.transformGeoJson();
     },
     copyLocation() {
       if (this.location) {
         navigator.clipboard.writeText(this.location);
-        alert("Location Copied")
+        alert("Location Copied");
       }
       return;
-    },
-  },
+    }
+  }
 };
 </script>
 
